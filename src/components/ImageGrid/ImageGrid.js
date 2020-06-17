@@ -1,46 +1,43 @@
 import React, { Component } from 'react';
-
+import { connect } from 'react-redux';
+import * as actions from './../../actions';
 import './styles.css';
-
-const key = '5f96323678d05ff0c4eb264ef184556868e303b32a2db88ecbf15746e6f25e02';
+import Button from '../common/Button';
 
 class ImageGrid extends Component {
-    state = {
-        images: [],
-    };
+  componentDidMount() {
+    this.props.loadImages();
+  }
 
-    componentDidMount() {
-        fetch(`https://api.unsplash.com/photos/?client_id=${key}&per_page=28`)
-            .then(res => res.json())
-            .then(images => {
-                this.setState({
-                    images,
-                });
-            });
-    }
-
-    render() {
-        const { images } = this.state;
-        return (
-            <div className="content">
-                <section className="grid">
-                    {images.map(image => (
-                        <div
-                            key={image.id}
-                            className={`item item-${Math.ceil(
-                                image.height / image.width,
-                            )}`}
-                        >
-                            <img
-                                src={image.urls.small}
-                                alt={image.user.username}
-                            />
-                        </div>
-                    ))}
-                </section>
+  render() {
+    const { images, error, isLoading, loadImages } = this.props;
+    return (
+      <div className="content">
+        <section className="grid">
+          {images.map(image => (
+            <div
+              key={image.id}
+              className={`item item-${Math.ceil(image.height / image.width)}`}
+            >
+              <img src={image.urls.small} alt={image.user.username} />
             </div>
-        );
-    }
+          ))}
+        </section>
+        <Button onClick={!isLoading && loadImages} loading={isLoading}>
+          Load more
+        </Button>
+        {error && <div className="error">{JSON.stringify(error)}</div>}
+      </div>
+    );
+  }
 }
 
-export default ImageGrid;
+const mapStateToProps = ({ imagesReducer, loadingReducer, errorReducer }) => ({
+  images: imagesReducer.images,
+  isLoading: loadingReducer.isLoading,
+  error: errorReducer.error,
+});
+
+const mapDispatchToProps = { ...actions };
+
+export default connect(mapStateToProps, mapDispatchToProps)(ImageGrid);
